@@ -17,6 +17,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 static GpioIrqHandler *GpioIrq[16];
 
+//Done, Not tested
 void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, PinTypes type, uint32_t value )
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -25,72 +26,82 @@ void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, P
     {
         return;
     }
-    obj->pin = pin;
-    obj->pinIndex = ( 0x01 << ( obj->pin & 0x0F ) );
+    obj->pin = pin;		//pin is port and number defined in pinName-board exp. PA12
+    obj->pinIndex = ( 0x01 << ( obj->pin & 0x0F ) );	//pinIndex is pin number exp. GPIO_Pin_12
 
+    //Save pin's port to obj->port exp. PORTA
+    //Enable clock for selected port
     if( ( obj->pin & 0xF0 ) == 0x00 )
     {
         obj->port = GPIOA;
-        __HAL_RCC_GPIOA_CLK_ENABLE( );
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     }
     else if( ( obj->pin & 0xF0 ) == 0x10 )
     {
-        obj->port = GPIOB;
-        __HAL_RCC_GPIOB_CLK_ENABLE( );
+    	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     }
     else if( ( obj->pin & 0xF0 ) == 0x20 )
     {
-        obj->port = GPIOC;
-        __HAL_RCC_GPIOC_CLK_ENABLE( );
+    	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     }
     else if( ( obj->pin & 0xF0 ) == 0x30 )
     {
-        obj->port = GPIOD;
-        __HAL_RCC_GPIOD_CLK_ENABLE( );
+    	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+    }
+    else if( ( obj->pin & 0xF0 ) == 0x40 )
+    {
+        obj->port = GPIOE;
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
     }
     else
     {
-        obj->port = GPIOH;
-        __HAL_RCC_GPIOH_CLK_ENABLE( );
+    	//STM32F103VE has ports A to E
+    	return;
     }
 
     GPIO_InitStructure.Pin =  obj->pinIndex ;
-    GPIO_InitStructure.Pull = type;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Speed = GPIO_Speed_10MHz;
 
-    if( mode == PIN_INPUT )
+    //According to STM32F013 Ref manual, pull up/down resistor can be enabled
+    //only in digital input mode
+    if( mode == PIN_INPUT )	//Digital input
     {
-        GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    	if(type == PIN_PULL_UP)
+    		GPIO_InitStructure.Mode = GPIO_Mode_IPU;
+    	else if (type == PIN_PULL_DOWN)
+    		GPIO_IntiStructure.Mode = GPIO_Mode_IPD;
+    	else
+    		GPIO_InitStructure.Mode = GPIO_Mode_IN_FLOATING;
     }
-    else if( mode == PIN_ANALOGIC )
+    else if( mode == PIN_ANALOGIC )		 //Analog function
     {
-        GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+        GPIO_InitStructure.Mode = GPIO_Mode_AIN;
     }
-    else if( mode == PIN_ALTERNATE_FCT )
+    else if( mode == PIN_ALTERNATE_FCT ) //Alternate function
     {
         if( config == PIN_OPEN_DRAIN )
         {
-            GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+            GPIO_InitStructure.Mode = GPIO_Mode_AF_OD;
         }
         else
         {
-            GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+            GPIO_InitStructure.Mode = GPIO_Mode_AF_PP;
         }
         GPIO_InitStructure.Alternate = value;
     }
-    else // mode ouptut
+    else // Output mode
     {
         if( config == PIN_OPEN_DRAIN )
         {
-            GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
+            GPIO_InitStructure.Mode = GPIO_Mode_Out_OD;
         }
         else
         {
-            GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+            GPIO_InitStructure.Mode = GPIO_Mode_Out_PP;
         }
     }
 
-    HAL_GPIO_Init( obj->port, &GPIO_InitStructure );
+    GPIO_Init( obj->port, &GPIO_InitStructure );
 
     // Sets initial output value
     if( mode == PIN_OUTPUT )
@@ -211,7 +222,10 @@ void GpioMcuWrite( Gpio_t *obj, uint32_t value )
     {
         return;
     }
-    HAL_GPIO_WritePin( obj->port, obj->pinIndex , ( GPIO_PinState )value );
+    if(value)
+    	GPIO_WriteBit(obj->port, obj->pinIndex, 1);
+    else
+    	GPIO_WriteBit(obj->port, obj->pinIndex, 0);
 }
 
 void GpioMcuToggle( Gpio_t *obj )
