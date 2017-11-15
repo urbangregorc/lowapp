@@ -144,60 +144,6 @@ void GpioMcuSetInterrupt( Gpio_t *obj, IrqModes irqMode, IrqPriorities irqPriori
     EXTI_ClearITPendingBit(obj->pinIndex);
     GPIO_EXTILineConfig(obj->port, obj->pinIndex);
 
-    switch( irqPriority )
-    {
-    case IRQ_VERY_LOW_PRIORITY:
-    case IRQ_LOW_PRIORITY:
-        priority = 3;
-        break;
-    case IRQ_MEDIUM_PRIORITY:
-        priority = 2;
-        break;
-    case IRQ_HIGH_PRIORITY:
-        priority = 1;
-        break;
-    case IRQ_VERY_HIGH_PRIORITY:
-    default:
-        priority = 0;
-        break;
-    }
-
-    switch( obj->pinIndex )
-    {
-    case GPIO_PIN_0:
-        IRQnb = EXTI0_IRQn;
-        break;
-    case GPIO_PIN_1:
-        IRQnb = EXTI1_IRQn;
-        break;
-    case GPIO_PIN_2:
-        IRQnb = EXTI2_IRQn;
-        break;
-    case GPIO_PIN_3:
-        IRQnb = EXTI3_IRQn;
-        break;
-    case GPIO_PIN_4:
-        IRQnb = EXTI4_IRQn;
-        break;
-    case GPIO_PIN_5:
-    case GPIO_PIN_6:
-    case GPIO_PIN_7:
-    case GPIO_PIN_8:
-    case GPIO_PIN_9:
-        IRQnb = EXTI9_5_IRQn;
-        break;
-    case GPIO_PIN_10:
-    case GPIO_PIN_11:
-    case GPIO_PIN_12:
-    case GPIO_PIN_13:
-    case GPIO_PIN_14:
-    case GPIO_PIN_15:
-        IRQnb = EXTI15_10_IRQn;
-        break;
-    default:
-        break;
-    }
-
     GpioIrq[(obj->pin ) & 0x0F] = irqHandler;
 
 }
