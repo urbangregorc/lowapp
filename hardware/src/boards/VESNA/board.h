@@ -23,6 +23,7 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_exti.h"
 
 #include "stm32l1xx.h"
 #include "stm32l1xx_hal.h"
