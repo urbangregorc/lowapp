@@ -109,38 +109,40 @@ void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, P
         GpioMcuWrite( obj, value );
     }
 }
-
+//Ported, but not tested jet
+//This function must be called after GpioMcuInit() function for the same pin
+//User must handle NVIC init and irq priorites manually in vsndriversconf.c
 void GpioMcuSetInterrupt( Gpio_t *obj, IrqModes irqMode, IrqPriorities irqPriority, GpioIrqHandler *irqHandler )
 {
     uint32_t priority = 0;
-
     IRQn_Type IRQnb = EXTI0_IRQn;
-    GPIO_InitTypeDef   GPIO_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
 
     if( irqHandler == NULL )
     {
         return;
     }
 
-    GPIO_InitStructure.Pin =  obj->pinIndex;
+    EXTI_InitStructure.EXTI_Line = obj->pinIndex;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 
     if( irqMode == IRQ_RISING_EDGE )
     {
-        GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+    	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     }
     else if( irqMode == IRQ_FALLING_EDGE )
     {
-        GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+    	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
     }
     else
     {
-        GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING_FALLING;
+    	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
     }
 
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-
-    HAL_GPIO_Init( obj->port, &GPIO_InitStructure );
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    EXTI_ClearITPendingBit(obj->pinIndex);
+    GPIO_EXTILineConfig(obj->port, obj->pinIndex);
 
     switch( irqPriority )
     {
@@ -198,8 +200,6 @@ void GpioMcuSetInterrupt( Gpio_t *obj, IrqModes irqMode, IrqPriorities irqPriori
 
     GpioIrq[(obj->pin ) & 0x0F] = irqHandler;
 
-    HAL_NVIC_SetPriority( IRQnb , priority, 0 );
-    HAL_NVIC_EnableIRQ( IRQnb );
 }
 
 void GpioMcuRemoveInterrupt( Gpio_t *obj )
@@ -210,7 +210,7 @@ void GpioMcuRemoveInterrupt( Gpio_t *obj )
     GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init( obj->port, &GPIO_InitStructure );
 }
-
+//Ported but not tested
 void GpioMcuWrite( Gpio_t *obj, uint32_t value )
 {
     if( ( obj == NULL ) || ( obj->port == NULL ) )
