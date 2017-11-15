@@ -16,6 +16,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "gpio-board.h"
 
 static GpioIrqHandler *GpioIrq[16];
+static void LOWAPP_EXTI_Callback( uint16_t gpioPin );
+static void LOWAPP_EXTI_IRQHandler( uint16_t gpioPin );
 
 //Done, Not tested
 void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, PinTypes type, uint32_t value )
@@ -147,14 +149,14 @@ void GpioMcuSetInterrupt( Gpio_t *obj, IrqModes irqMode, IrqPriorities irqPriori
     GpioIrq[(obj->pin ) & 0x0F] = irqHandler;
 
 }
-
+//Ported but not tested
 void GpioMcuRemoveInterrupt( Gpio_t *obj )
 {
     GPIO_InitTypeDef   GPIO_InitStructure;
 
     GPIO_InitStructure.Pin =  obj->pinIndex ;
-    GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-    HAL_GPIO_Init( obj->port, &GPIO_InitStructure );
+    GPIO_InitStructure.Mode = GPIO_Mode_AIN;
+    GPIO_StructInit( obj->port, &GPIO_InitStructure );
 }
 //Ported but not tested
 void GpioMcuWrite( Gpio_t *obj, uint32_t value )
@@ -173,7 +175,7 @@ void GpioMcuWrite( Gpio_t *obj, uint32_t value )
     else
     	GPIO_WriteBit(obj->port, obj->pinIndex, 0);
 }
-
+//Ported but not tested
 void GpioMcuToggle( Gpio_t *obj )
 {
     if( ( obj == NULL ) || ( obj->port == NULL ) )
@@ -186,9 +188,13 @@ void GpioMcuToggle( Gpio_t *obj )
     {
         return;
     }
-    HAL_GPIO_TogglePin( obj->port, obj->pinIndex );
+    //Toggle pin
+    if(GPIO_ReadOutputDataBit( obj->port, obj->pinIndex ))
+    	GPIO_ResetBits(obj->port, obj->pinIndex);
+    else
+    	GPIO_SetBits(obj->port, obj->pinIndex);
 }
-
+//Ported but not tested
 uint32_t GpioMcuRead( Gpio_t *obj )
 {
     if( obj == NULL )
@@ -200,75 +206,85 @@ uint32_t GpioMcuRead( Gpio_t *obj )
     {
         return 0;
     }
-    return HAL_GPIO_ReadPin( obj->port, obj->pinIndex );
+    return GPIO_ReadInputDataBit( obj->port, obj->pinIndex );
 }
-
+//Ported but not tested
 void EXTI0_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_0 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_0 );
 }
-
+//Ported but not tested
 void EXTI1_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_1 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_1 );
 }
-
+//Ported but not tested
 void EXTI2_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_2 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_2 );
 }
-
+//Ported but not tested
 void EXTI3_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_3 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_3 );
 }
-
+//Ported but not tested
 void EXTI4_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_4 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_4 );
 }
-
+//Ported but not tested
 void EXTI9_5_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_5 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_6 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_7 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_8 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_9 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_5 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_6 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_7 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_8 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_9 );
 }
-
+//Ported but not tested
 void EXTI15_10_IRQHandler( void )
 {
 #if !defined( USE_NO_TIMER )
     RtcRecoverMcuStatus( );
 #endif
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_10 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_11 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_12 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_13 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_14 );
-    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_15 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_10 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_11 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_12 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_13 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_14 );
+    LOWAPP_EXTI_IRQHandler( GPIO_Pin_15 );
 }
-
-void HAL_GPIO_EXTI_Callback( uint16_t gpioPin )
+//Ported but not tested
+static void LOWAPP_EXTI_IRQHandler(uint16_t gpioPin)
+{
+  /* EXTI line interrupt detected */
+	if(EXTI_GetITStatus(gpioPin) != RESET)
+	{
+		EXTI_ClearITPendingBit(gpioPin);
+		LOWAPP_EXTI_Callback(gpioPin);
+	}
+}
+//Ported but not tested
+static void LOWAPP_EXTI_Callback( uint16_t gpioPin )
 {
     uint8_t callbackIndex = 0;
 
