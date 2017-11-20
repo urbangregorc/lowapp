@@ -115,3 +115,8 @@ uint32_t GpioRead( Gpio_t *obj )
 #endif
     }
 }
+
+void Gpio_EXTI_IRQHandler(uint16_t gpioPin)
+{
+	LOWAPP_EXTI_IRQHandler(gpioPin);
+}

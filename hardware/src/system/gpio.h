@@ -158,5 +158,12 @@ void GpioToggle( Gpio_t *obj );
  * \retval value   Current GPIO input value
  */
 uint32_t GpioRead( Gpio_t *obj );
+/*
+ * \biref EXT Lines interrupt handler called from stm32f10x_it.c
+ *
+ * \param [IN] gpioPin is number of pin pin0 = 0x0001 pin1=0x0002 pin2=0x0004
+ *
+ */
+void Gpio_EXTI_IRQHandler(uint16_t gpioPin);
 
 #endif // __GPIO_H__
