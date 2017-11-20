@@ -15,31 +15,32 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
-#include <stdbool.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+//#include <stdbool.h>
 
 #include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_exti.h"
+#include "../../../../../../FWLib/inc/stm32f10x_gpio.h"
+#include "../../../../../../FWLib/inc/stm32f10x_exti.h"
 
-#include "stm32l1xx.h"
-#include "stm32l1xx_hal.h"
-#include "utilities.h"
-#include "timer.h"
-#include "delay.h"
+//#include "stm32l1xx.h"
+//#include "stm32l1xx_hal.h"
+//#include "utilities.h"
+//#include "timer.h"
+//#include "delay.h"
 #include "gpio.h"
-#include "adc.h"
-#include "spi.h"
-#include "i2c.h"
-#include "uart.h"
-#include "radio.h"
-#include "sx1272/sx1272.h"
-#include "adc-board.h"
-#include "rtc-board.h"
-#include "sx1272-board.h"
+//#include "adc.h"
+//#include "spi.h"
+//#include "i2c.h"
+//#include "uart.h"
+//#include "radio.h"
+//#include "sx1272/sx1272.h"
+//#include "adc-board.h"
+//#include "rtc-board.h"
+//#include "sx1272-board.h"
 
 /*!
  * Generic definition
@@ -134,9 +135,10 @@ extern Gpio_t DebugPin2;
 /*!
  * MCU objects
  */
-extern Adc_t Adc;
-extern I2c_t I2c;
-extern Uart_t Uart1;
+//I comeneted lower 3 lines to be able to compile and test just gpio code
+//extern Adc_t Adc;
+//extern I2c_t I2c;
+//extern Uart_t Uart1;
 enum BoardPowerSource
 {
     USB_POWER = 0,
