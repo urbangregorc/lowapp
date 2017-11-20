@@ -39,7 +39,7 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 //#include "radio.h"
 //#include "sx1272/sx1272.h"
 //#include "adc-board.h"
-//#include "rtc-board.h"
+#include "rtc-board.h"
 //#include "sx1272-board.h"
 
 /*!
