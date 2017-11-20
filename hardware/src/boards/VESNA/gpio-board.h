@@ -70,5 +70,11 @@ void GpioMcuToggle( Gpio_t *obj );
  * \retval value  Current GPIO input value
  */
 uint32_t GpioMcuRead( Gpio_t *obj );
+/*!
+ * \brief Interrupt handler for External line interrupts
+ *
+ * \param [IN]
+ */
+void LOWAPP_EXTI_IRQHandler(uint16_t gpioPin);
 
 #endif // __GPIO_MCU_H__
