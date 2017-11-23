@@ -18,9 +18,6 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 static GpioIrqHandler *GpioIrq[16];
 static void LOWAPP_EXTI_Callback( uint16_t gpioPin );
-static void RtcRecoverMcuStatus(void){
-	return;
-};
 
 //Ported and tested
 void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, PinTypes type, uint32_t value )
