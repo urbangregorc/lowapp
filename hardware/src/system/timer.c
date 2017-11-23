@@ -74,7 +74,7 @@ void TimerInit( TimerEvent_t *obj, void ( *callback )( void ) )
 {
     obj->Timestamp = 0;
     obj->ReloadValue = 0;
-    obj->IsRunning = false;
+    obj->IsRunning = FALSE;
     obj->Callback = callback;
     obj->Next = NULL;
 }
@@ -86,14 +86,14 @@ void TimerStart( TimerEvent_t *obj )
 
     __disable_irq( );
 
-    if( ( obj == NULL ) || ( TimerExists( obj ) == true ) )
+    if( ( obj == NULL ) || ( TimerExists( obj ) == TRUE ) )
     {
         __enable_irq( );
         return;
     }
 
     obj->Timestamp = obj->ReloadValue;
-    obj->IsRunning = false;
+    obj->IsRunning = FALSE;
 
     if( TimerListHead == NULL )
     {
@@ -101,7 +101,7 @@ void TimerStart( TimerEvent_t *obj )
     }
     else
     {
-        if( TimerListHead->IsRunning == true )
+        if( TimerListHead->IsRunning == TRUE )
         {
             elapsedTime = TimerGetValue( );
             if( elapsedTime > TimerListHead->Timestamp )
@@ -188,11 +188,11 @@ static void TimerInsertNewHeadTimer( TimerEvent_t *obj, uint32_t remainingTime )
     if( cur != NULL )
     {
         cur->Timestamp = remainingTime - obj->Timestamp;
-        cur->IsRunning = false;
+        cur->IsRunning = FALSE;
     }
 
     obj->Next = cur;
-    obj->IsRunning = true;
+    obj->IsRunning = TRUE;
     TimerListHead = obj;
     TimerSetTimeout( TimerListHead );
 }
@@ -212,7 +212,7 @@ void TimerIrqHandler( void )
         TimerListHead->Timestamp -= elapsedTime;
     }
 
-    TimerListHead->IsRunning = false;
+    TimerListHead->IsRunning = FALSE;
 
     while( ( TimerListHead != NULL ) && ( TimerListHead->Timestamp == 0 ) )
     {
@@ -228,9 +228,9 @@ void TimerIrqHandler( void )
     // start the next TimerListHead if it exists
     if( TimerListHead != NULL )
     {
-        if( TimerListHead->IsRunning != true )
+        if( TimerListHead->IsRunning != TRUE )
         {
-            TimerListHead->IsRunning = true;
+            TimerListHead->IsRunning = TRUE;
             TimerSetTimeout( TimerListHead );
         }
     }
@@ -255,7 +255,7 @@ void TimerStop( TimerEvent_t *obj )
 
     if( TimerListHead == obj ) // Stop the Head
     {
-        if( TimerListHead->IsRunning == true ) // The head is already running
+        if( TimerListHead->IsRunning == TRUE ) // The head is already running
         {
             elapsedTime = TimerGetValue( );
             if( elapsedTime > obj->Timestamp )
@@ -267,10 +267,10 @@ void TimerStop( TimerEvent_t *obj )
 
             if( TimerListHead->Next != NULL )
             {
-                TimerListHead->IsRunning = false;
+                TimerListHead->IsRunning = FALSE;
                 TimerListHead = TimerListHead->Next;
                 TimerListHead->Timestamp += remainingTime;
-                TimerListHead->IsRunning = true;
+                TimerListHead->IsRunning = TRUE;
                 TimerSetTimeout( TimerListHead );
             }
             else
@@ -331,11 +331,11 @@ static bool TimerExists( TimerEvent_t *obj )
     {
         if( cur == obj )
         {
-            return true;
+            return TRUE;
         }
         cur = cur->Next;
     }
-    return false;
+    return FALSE;
 }
 
 void TimerReset( TimerEvent_t *obj )
@@ -380,7 +380,7 @@ static void TimerSetTimeout( TimerEvent_t *obj )
 
 void TimerLowPowerHandler( void )
 {
-    if( ( TimerListHead != NULL ) && ( TimerListHead->IsRunning == true ) )
+    if( ( TimerListHead != NULL ) && ( TimerListHead->IsRunning == TRUE ) )
     {
         if( HasLoopedThroughMain < 5 )
         {
