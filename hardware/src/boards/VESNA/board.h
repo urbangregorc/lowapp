@@ -23,13 +23,13 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 //#include <stdbool.h>
 
 #include "stm32f10x_rcc.h"
-#include "../../../../../../FWLib/inc/stm32f10x_gpio.h"
-#include "../../../../../../FWLib/inc/stm32f10x_exti.h"
+#include "stm32f10x_gpio.h"
+#include "stm32f10x_exti.h"
 
 //#include "stm32l1xx.h"
 //#include "stm32l1xx_hal.h"
 //#include "utilities.h"
-//#include "timer.h"
+#include "timer.h"
 //#include "delay.h"
 #include "gpio.h"
 //#include "adc.h"
