@@ -15,6 +15,14 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __SX1272_ARCH_H__
 #define __SX1272_ARCH_H__
 
+//Defines to handle false and true states from stdlib, which i do not use since it causes error in stmf10x.h lib
+#ifndef true
+#define true TRUE
+#endif
+#ifndef false
+#define false FALSE
+#endif
+
 /*!
  * \brief Radio hardware registers initialization definition
  *
