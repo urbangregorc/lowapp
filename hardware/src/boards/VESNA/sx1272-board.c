@@ -97,36 +97,45 @@ uint8_t SX1272GetPaSelect( uint32_t channel )
 
 void SX1272SetAntSwLowPower( bool status )
 {
+	//We do not use special MCU pins to drive RF switch. Instead we drive it
+	//directly from SX1272's pin 23- RXTX
     if( RadioIsActive != status )
     {
         RadioIsActive = status;
     
-        if( status == false )
+        /*if( status == false )
         {
             SX1272AntSwInit( );
         }
         else
         {
             SX1272AntSwDeInit( );
-        }
+        }*/
     }
 }
 
 void SX1272AntSwInit( void )
 {
-    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
-    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
+	//We do not use special MCU pins to drive RF switch. Instead we drive it
+	//directly from SX1272's pin 23- RXTX
+    //GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
+    //GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
 }
 
 void SX1272AntSwDeInit( void )
 {
-    GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-    GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+	//We do not use special MCU pins to drive RF switch. Instead we drive it
+	//directly from SX1272's pin 23- RXTX
+    //GpioInit( &AntTx, RADIO_ANT_SWITCH_TX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+    //GpioInit( &AntRx, RADIO_ANT_SWITCH_RX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
 }
 
 void SX1272SetAntSw( uint8_t rxTx )
 {
-    if( rxTx != 0 ) // 1: TX, 0: RX
+	//We do not use special MCU pins to drive RF switch. Instead we drive it
+	//directly from SX1272's pin 23- RXTX
+
+	/*if( rxTx != 0 ) // 1: TX, 0: RX
     {
         GpioWrite( &AntRx, 0 );
         GpioWrite( &AntTx, 1 );
@@ -135,7 +144,7 @@ void SX1272SetAntSw( uint8_t rxTx )
     {
         GpioWrite( &AntRx, 1 );
         GpioWrite( &AntTx, 0 );
-    }
+    }*/
 }
 
 bool SX1272CheckRfFrequency( uint32_t frequency )
