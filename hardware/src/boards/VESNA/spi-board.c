@@ -14,140 +14,102 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #include "board.h"
 #include "spi-board.h"
-#include "stm32l1xx_hal_spi.h"
+#include "stm32f10x_spi.h"
+#include "vsnspi_new.h"
 
-/*!
- * \brief  Find First Set
- *         This function identifies the least significant index or position of the
- *         bits set to one in the word
- *
- * \param [in]  value  Value to find least significant index
- * \retval bitIndex    Index of least significat bit at one
- */
-__STATIC_INLINE uint8_t __ffs( uint32_t value )
-{
-    return( uint32_t )( 32 - __CLZ( value & ( -value ) ) );
+/*SPI is currently hardcoded to J2 connector. Spi2 connects to J2 through U8 and U1 analog
+switches.
+Function	J2-Pin		MCU-Pin		Switch-Control
+MOSI		PD10		PB15		PC8
+MISO		PD12		PB14		PC8
+SCK			PD11		PB13		PC8
+NSS			PD1			PD1			/
+
+*/
+
+static void vsnSPIerrorcallBackMain (void* callBackStructOfPeripheral){
+	vsnSPI_CommonStructure* x;
+	x = (vsnSPI_CommonStructure*) callBackStructOfPeripheral;
+	vsnSPI_chipSelect(x, SPI_CS_HIGH);
+	printf("ERROR: SPIerrorCallBack was execute!!!\n");
 }
-
-/*!
- * MCU SPI peripherals enumeration
- */
-typedef enum
-{
-    SPI_1 = ( uint32_t )SPI1_BASE,
-    SPI_2 = ( uint32_t )SPI2_BASE,
-}SPIName;
 
 void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames nss )
 {
-    __HAL_RCC_SPI1_FORCE_RESET( );
-    __HAL_RCC_SPI1_RELEASE_RESET( );
+	SPI_InitTypeDef SPI_InitStructure;
+	vsnSPI_ErrorStatus statusSpi;
 
-    __HAL_RCC_SPI1_CLK_ENABLE( );
+	//If SPI SWICTH pin is defined than pins on connector are connected to MCU through analog switch.
+	//So we need to intialize mosi, miso and sclk as floating inputs
+	/* Configure  */
+#ifdef SPI_SWITCH
+	GpioInit( &obj->Mosi, mosi, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+	GpioInit( &obj->Miso, miso, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+	GpioInit( &obj->Sclk, sclk, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+	//Define SPI_Switch pin as output pin and set it to one so you make connection between
+	//connector and MCU analog switch
+	GpioInit( &obj->Switch, SPI_SWITCH, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1);
+#endif
+	//Initalize NSS as output and set it to 1 to disable slave
+	GpioInit(&obj->Nss, nss, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1);
+	/* Configure hardware */
+	vsnSPI_initHW(SPI_PORT);
 
-    obj->Spi.Instance = ( SPI_TypeDef *) SPI1_BASE;
+	/* Configure SPI init structure*/
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;//OK
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;	//OK
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;//OK
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;//OK
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;//OK
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;//OK
+	SPI_InitStructure.SPI_CRCPolynomial = 0;	//OK
 
-    GpioInit( &obj->Mosi, mosi, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, GPIO_AF5_SPI1 );
-    GpioInit( &obj->Miso, miso, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, GPIO_AF5_SPI1 );
-    GpioInit( &obj->Sclk, sclk, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, GPIO_AF5_SPI1 );
-
-    if( nss != NC )
-    {
-        GpioInit( &obj->Nss, nss, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, GPIO_AF5_SPI1 );
-    }
-    else
-    {
-        obj->Spi.Init.NSS = SPI_NSS_SOFT;
-    }
-
-    if( nss == NC )
-    {
-        SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 0 );
-    }
-    else
-    {
-        SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 1 );
-    }
-    SpiFrequency( obj, 10000000 );
-
-    HAL_SPI_Init( &obj->Spi );
+	//Initialize SPI Common Structure
+    statusSpi = vsnSPI_initCommonStructure(&obj->Spi, SPI_PORT, &SPI_InitStructure, obj->Nss.pinIndex, obj->Nss.port,10000000);
+    //Initalize SPI
+    statusSpi = vsnSPI_Init(&obj->Spi, vsnSPIerrorcallBackMain);
 }
 
 void SpiDeInit( Spi_t *obj )
 {
-    HAL_SPI_DeInit( &obj->Spi );
-
+	vsnSPI_deInit( &obj->Spi );
+#ifdef SPI_SWITCH
+	//Disable analog switch
+	GpioInit( &obj->Switch, SPI_SWITCH, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0);
+#endif
     GpioInit( &obj->Mosi, obj->Mosi.pin, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
     GpioInit( &obj->Miso, obj->Miso.pin, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_DOWN, 0 );
     GpioInit( &obj->Sclk, obj->Sclk.pin, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
     GpioInit( &obj->Nss, obj->Nss.pin, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
-}
 
+}
+//This function is no longer needed
 void SpiFormat( Spi_t *obj, int8_t bits, int8_t cpol, int8_t cpha, int8_t slave )
 {
-    obj->Spi.Init.Direction = SPI_DIRECTION_2LINES;
-    if( bits == SPI_DATASIZE_8BIT )
-    {
-        obj->Spi.Init.DataSize = SPI_DATASIZE_8BIT;
-    }
-    else
-    {
-        obj->Spi.Init.DataSize = SPI_DATASIZE_16BIT;
-    }
-    obj->Spi.Init.CLKPolarity = cpol;
-    obj->Spi.Init.CLKPhase = cpha;
-    obj->Spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    obj->Spi.Init.TIMode = SPI_TIMODE_DISABLE;
-    obj->Spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    obj->Spi.Init.CRCPolynomial = 7;
-
-    if( slave == 0 )
-    {
-        obj->Spi.Init.Mode = SPI_MODE_MASTER;
-    }
-    else
-    {
-        obj->Spi.Init.Mode = SPI_MODE_SLAVE;
-    }
+    while(1){};
 }
-
+//This function is no longer needed
 void SpiFrequency( Spi_t *obj, uint32_t hz )
 {
-    uint32_t divisor;
-
-    divisor = SystemCoreClock / hz;
-
-    // Find the nearest power-of-2
-    divisor = divisor > 0 ? divisor-1 : 0;
-    divisor |= divisor >> 1;
-    divisor |= divisor >> 2;
-    divisor |= divisor >> 4;
-    divisor |= divisor >> 8;
-    divisor |= divisor >> 16;
-    divisor++;
-
-    divisor = __ffs( divisor ) - 1;
-
-    divisor = ( divisor > 0x07 ) ? 0x07 : divisor;
-
-    obj->Spi.Init.BaudRatePrescaler = divisor << 3;
+    while(1){};
 }
+
 
 FlagStatus SpiGetFlag( Spi_t *obj, uint16_t flag )
 {
     FlagStatus bitstatus = RESET;
-
-    // Check the status of the specified SPI flag
-    if( ( obj->Spi.Instance->SR & flag ) != ( uint16_t )RESET )
-    {
-        // SPI_I2S_FLAG is set
-        bitstatus = SET;
-    }
-    else
-    {
-        // SPI_I2S_FLAG is reset
-        bitstatus = RESET;
-    }
+		if( ( obj->Spi.devSPIx->SR & flag ) != ( uint16_t )RESET )
+		{
+		// SPI_I2S_FLAG is set
+		bitstatus = SET;
+		}
+		else
+		{
+		// SPI_I2S_FLAG is reset
+		bitstatus = RESET;
+		}
     // Return the SPI_I2S_FLAG status
     return  bitstatus;
 }
@@ -156,18 +118,16 @@ uint16_t SpiInOut( Spi_t *obj, uint16_t outData )
 {
     uint8_t rxData = 0;
 
-    if( ( obj == NULL ) || ( obj->Spi.Instance ) == NULL )
+    if(  (obj == NULL) || (obj->Spi.devSPIx == NULL))
     {
         assert_param( FAIL );
     }
-
-    __HAL_SPI_ENABLE( &obj->Spi );
-
-    while( SpiGetFlag( obj, SPI_FLAG_TXE ) == RESET );
-    obj->Spi.Instance->DR = ( uint16_t ) ( outData & 0xFF );
-
-    while( SpiGetFlag( obj, SPI_FLAG_RXNE ) == RESET );
-    rxData = ( uint16_t ) obj->Spi.Instance->DR;
+    //Send data
+    while( SpiGetFlag( obj, SPI_I2S_FLAG_TXE ) == RESET );
+    obj->Spi.devSPIx->DR = ( uint16_t ) ( outData & 0xFF );
+    //Read data
+    while( SpiGetFlag( obj, SPI_I2S_FLAG_RXNE ) == RESET );
+    rxData = ( uint16_t ) obj->Spi.devSPIx->DR;
 
     return( rxData );
 }
