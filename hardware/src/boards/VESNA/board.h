@@ -36,11 +36,11 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 #include "spi.h"
 //#include "i2c.h"
 //#include "uart.h"
-//#include "radio.h"
-//#include "sx1272/sx1272.h"
+#include "radio.h"
+#include "sx1272/sx1272.h"
 //#include "adc-board.h"
 #include "rtc-board.h"
-//#include "sx1272-board.h"
+#include "sx1272-board.h"
 
 /*!
  * Generic definition
@@ -51,6 +51,14 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 
 #ifndef FAIL
 #define FAIL                                        0
+#endif
+
+//Defines to handle false and true states from stdlib, which i do not use since it causes error in stmf10x.h lib
+#ifndef true
+#define true TRUE
+#endif
+#ifndef false
+#define false FALSE
 #endif
 
 /*!
