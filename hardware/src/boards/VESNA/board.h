@@ -33,7 +33,7 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 //#include "delay.h"
 #include "gpio.h"
 //#include "adc.h"
-//#include "spi.h"
+#include "spi.h"
 //#include "i2c.h"
 //#include "uart.h"
 //#include "radio.h"
@@ -69,12 +69,21 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
  * Board MCU pins definitions
  */
 
-#define RADIO_RESET                                 PA_2
+#define RADIO_RESET                                 PD_8
 
-#define RADIO_MOSI                                  PA_7
-#define RADIO_MISO                                  PA_6
-#define RADIO_SCLK                                  PA_5
-#define RADIO_NSS                                   PB_0
+/*-----------------------SPI Defines----------------------------------*/
+//SPI is currently set to J2 connector
+#define RADIO_MOSI                                  PD_10
+#define RADIO_MISO                                  PD_12
+#define RADIO_SCLK                                  PD_11
+#define RADIO_NSS                                   PD_1
+#define SPI_PORT									VSN_SPI2
+//In case you do not use analog switch to connect connector and
+//MCU, you need to comment SPI_SWITCH define. For more details check SpiInit
+//in spi-board.c
+#define SPI_SWITCH									PC_8
+/*-----------------------End of SPI-----------------------------------*/
+
 
 #define RADIO_DIO_0                                 PB_1
 #define RADIO_DIO_1                                 PB_10
